@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz - Set 1</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #fffbf5; }
+  .card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+  .option { display: block; margin: 5px 0; padding: 10px; width: 100%; text-align: left; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 5px; }
+  .option:hover { background: #f0f0f0; }
+  .correct { color: #0d7a6e; font-weight: bold; margin-top: 10px; }
+  .wrong { color: #d94f4f; font-weight: bold; margin-top: 10px; }
+  .hidden { display: none; }
+  .explanation { background: #f8f9ff; padding: 10px; margin-top: 10px; border-left: 4px solid #f4a435; border-radius: 4px; }
+  #progress { font-size: 1.2em; font-weight: bold; margin-bottom: 20px; }
+  .nav { margin-top: 20px; display: flex; gap: 10px; }
+  .nav button { padding: 10px 20px; cursor: pointer; background: #0f0e17; color: #fff; border: none; border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<div id="progress">Score: 0 / 0</div>
+<div id="quiz"></div>
+<div class="nav">
+  <button onclick="goBack()">Go Back</button>
+  <button onclick="goNext()">Go Next</button>
+</div>
+
+<script>
+const questions = [
+  {q: "A student scores 90 on a maths test but struggles in creative writing. Which concept best explains why psychologists cannot describe her with a single number?", options: ["Situationism","Multi-dimensionality of psychological attributes","IQ normalisation","Adaptive behaviour"], correct: 1, explanation: "Psychological attributes are multi-dimensional, not unidimensional. A single score cannot capture performance across all domains.", trap: "Students often choose IQ normalisation, confusing measurement with the nature of the attribute.", concept: "Assessment of Psychological Attributes"},
+  {q: "Wechsler defined intelligence as the ability to 'deal effectively with the environment'. Which key idea does his definition stress that Binet's original definition did NOT explicitly include?", options: ["Memory accuracy","Purposeful and adaptive functioning","Verbal comprehension","Factor structure"], correct: 1, explanation: "Wechsler emphasised purposeful action and adaptation to environment, going beyond Binet's focus on judgement and reasoning alone.", trap: "Binet also talked about reasoning, so students confuse the two. The key addition by Wechsler is adaptive functioning.", concept: "Intelligence – Definitions"},
+  {q: "In Spearman's model, which factor is described as 'primary and common to all intellectual performances'?", options: ["s-factor","g-factor","p-factor","v-factor"], correct: 1, explanation: "Spearman's g-factor (general factor) underlies all cognitive tasks, while s-factors are task-specific.", trap: "Students confuse g and s. 'General' = g; 'Specific' = s.", concept: "Theories of Intelligence – Spearman"},
+  {q: "The concept of Mental Age (MA) was introduced during which revision of Binet's test?", options: ["1905","1908","1912","1916"], correct: 1, explanation: "MA was formally introduced in the 1908 revision of Binet and Simon's scale.", trap: "1905 was when the test was first published; MA came in 1908.", concept: "Assessment of Intelligence"},
+  {q: "A child's MA is 10 and CA is 8. What does this indicate?", options: ["The child is intellectually disabled","The child is of average intelligence","The child is intellectually advanced","The child's IQ equals 100"], correct: 2, explanation: "When MA > CA, the child is performing above age expectations — indicating intellectual advancement. IQ = (10/8)×100 = 125.", trap: "Students confuse direction: MA > CA means gifted, not disabled.", concept: "IQ – Mental Age"},
+  {q: "Which term describes an individual's preference for one activity over others, distinct from ability to perform it?", options: ["Aptitude","Interest","Value","Personality"], correct: 1, explanation: "Interest = preference; Aptitude = potential ability. They are related but distinct psychological attributes.", trap: "Aptitude is about 'can do'; Interest is about 'want to do'.", concept: "Domains of Psychological Attributes"},
+  {q: "Formal psychological assessment differs from informal assessment primarily in which way?", options: ["It is longer","It is objective, standardised, and organised","It is used only by doctors","It involves projective tests only"], correct: 1, explanation: "Formal assessment is systematic and standardised. Informal assessment is subjective and varies between assessors.", trap: "Formal vs. informal is about standardisation, not length or type of test.", concept: "Assessment Methods"},
+  {q: "William Stern introduced the IQ formula in 1912. What is the correct formula?", options: ["CA/MA × 100","MA/CA × 100","MA − CA × 10","(MA + CA)/2"], correct: 1, explanation: "IQ = (MA ÷ CA) × 100. The multiplier of 100 avoids decimals and sets average IQ at 100.", trap: "Order matters: MA in the numerator, CA in the denominator. Not the reverse.", concept: "IQ Formula"},
+  {q: "According to Table 1.1 in NCERT, what percentage of the population falls in the 'Average' IQ range (90–109)?", options: ["16.1%","6.7%","50.0%","2.2%"], correct: 2, explanation: "The largest single group — 50% of the population — falls in the average IQ range of 90–109.", trap: "Students often select 16.1%, which is for High Average or Low Average groups.", concept: "IQ Distribution"},
+  {q: "Intellectual disability is diagnosed only when deficits in adaptive behaviour occur during which period?", options: ["Adolescence (12–18 years)","Developmental period (0–18 years)","Early childhood (0–6 years)","School age (6–14 years)"], correct: 1, explanation: "AAMD defines intellectual disability as manifesting during the developmental period — from birth to 18 years.", trap: "The range is 0–18, not limited to early childhood or adolescence alone.", concept: "Intellectual Disability"},
+  {q: "Lewis Terman began the landmark study of gifted individuals (IQ 130+) in which year?", options: ["1905","1912","1925","1930"], correct: 2, explanation: "Terman's longitudinal study tracking ~1500 gifted children began in 1925.", trap: "1905 is linked to Binet's first test, not Terman's gifted study.", concept: "Intellectual Giftedness"},
+  {q: "Which psychologist proposed that intelligence is 'the ability to adapt, shape, and select environments to accomplish one's goals'?", options: ["Howard Gardner","Alfred Binet","Robert Sternberg","J.P. Das"], correct: 2, explanation: "This definition is from Sternberg's triarchic theory, emphasising active shaping of environments.", trap: "Gardner defines intelligence as distinct types, not as adaptive shaping.", concept: "Triarchic Theory"},
+  {q: "Emotional intelligence was first introduced as a formal concept by which researchers?", options: ["Gardner and Sternberg","Salovey and Mayer","Binet and Simon","Guilford and Thurstone"], correct: 1, explanation: "Salovey and Mayer introduced emotional intelligence, describing it as monitoring and using emotional information.", trap: "Goleman popularised it, but NCERT attributes the original concept to Salovey and Mayer.", concept: "Emotional Intelligence"},
+  {q: "Aptitude is best distinguished from intelligence by which characteristic?", options: ["Aptitude is general; intelligence is specific","Intelligence predicts future learning; aptitude is a current score","Aptitude indicates potential for a specific skill domain; intelligence is general capacity","Aptitude requires higher IQ than intelligence"], correct: 2, explanation: "Aptitude = domain-specific potential; Intelligence = broad, general cognitive capacity.", trap: "Students reverse this: intelligence is general, aptitude is specific.", concept: "Aptitude vs. Intelligence"},
+  {q: "In Thurstone's Primary Mental Abilities, which ability involves 'speed and accuracy in numerical computations'?", options: ["Verbal Comprehension","Spatial Relations","Numerical Abilities","Word Fluency"], correct: 2, explanation: "Thurstone listed Numerical Abilities as one of seven primary mental abilities, focused on computational speed and accuracy.", trap: "Verbal Comprehension is about word meanings; Word Fluency is about flexible use of words.", concept: "Thurstone's Primary Mental Abilities"},
+  {q: "In Guilford's Structure-of-Intellect model (1988), how many total cells does the model contain?", options: ["120","150","180","210"], correct: 2, explanation: "6 operations × 5 contents × 6 products = 180 cells in Guilford's model.", trap: "The three dimensions are 6, 5, and 6 — not 5×5×5 or other combinations.", concept: "Guilford's SOI Model"},
+  {q: "According to the PASS model, which process involves remembering information in a fixed serial order?", options: ["Simultaneous processing","Planning","Successive processing","Arousal"], correct: 2, explanation: "Successive processing involves serial memory where recall of one item triggers the next, e.g., reciting the alphabet.", trap: "Simultaneous processing integrates information into a meaningful pattern, not a serial chain.", concept: "PASS Model – Successive Processing"},
+  {q: "The Cognitive Assessment System (CAS) developed by Das and Naglieri is designed for which age group?", options: ["3–12 years","5–18 years","8–16 years","6–20 years"], correct: 1, explanation: "CAS measures PASS cognitive functions in individuals aged 5 to 18 years.", trap: "The lower limit is 5, not 3 or 6; and the upper is 18, not 16.", concept: "PASS Model – CAS"},
+  {q: "Which of the following intelligence tests developed in India is classified as a Performance test?", options: ["Group Test of General Mental Ability by S. Jalota","Bhatia's Battery of Performance Tests","The Bihar Test of Intelligence by S.M. Mohsin","Group Test of Intelligence by Prayag Mehta"], correct: 1, explanation: "Bhatia's Battery of Performance Tests is the most popular Indian performance intelligence test listed in NCERT.", trap: "The other three options are all verbal tests developed in India.", concept: "Intelligence Testing in India"},
+  {q: "Vygotsky argued that elementary mental functions (e.g., walking, crying) are universal, but higher mental functions are largely:", options: ["Genetically determined","Culture-produced","IQ-dependent","Neurologically fixed"], correct: 1, explanation: "Vygotsky held that culture shapes how higher mental processes like problem-solving and thinking operate.", trap: "Students may say 'genetically determined' because lower functions are universal. The key contrast: higher = culturally shaped.", concept: "Culture and Intelligence"},
+  {q: "The Sanskrit concept of 'Buddhi' includes which component that is absent from most western definitions of intelligence?", options: ["Abstract reasoning","Verbal comprehension","Affective and motivational components","Spatial relations"], correct: 2, explanation: "Buddhi includes feelings, will, and conscience — affective/motivational components — alongside cognition, unlike purely cognitive western definitions.", trap: "Western tests do measure cognition. The uniqueness of Buddhi lies in its affective-motivational dimension.", concept: "Intelligence in Indian Tradition"},
+  {q: "A 'culture-fair' test is designed primarily to:", options: ["Test only verbal intelligence","Eliminate the advantages of any specific cultural group","Favour urban populations","Increase test reliability"], correct: 1, explanation: "Culture-fair tests reduce cultural bias by using items common to all cultures or avoiding language-dependent items.", trap: "Culture-fair tests are NOT about testing verbal intelligence — they often reduce verbal content to reduce bias.", concept: "Culture-Fair Tests"},
+  {q: "What is the IQ of a 12-year-old child with a mental age of 9?", options: ["75","90","108","125"], correct: 0, explanation: "IQ = (9/12) × 100 = 75. MA < CA, so IQ < 100.", trap: "Students compute (12/9)×100 = 133, reversing MA and CA.", concept: "IQ Calculation"},
+  {q: "According to NCERT, the study of individual differences concerns itself primarily with:", options: ["Universal laws of behaviour","Distinctiveness and variations in people's characteristics","Environmental determinism only","Cross-cultural psychology"], correct: 1, explanation: "Individual differences focus on how and why people differ — their distinctiveness and variation in characteristics.", trap: "Universal laws belong to general psychology, not the study of individual differences.", concept: "Individual Differences"},
+  {q: "Which type of aptitude test measures abilities in several separate but related areas as a battery?", options: ["Independent (specialised) aptitude test","Multiple (generalised) aptitude test battery","Achievement test","Personality inventory"], correct: 1, explanation: "Multiple Aptitude Test Batteries like DAT measure several distinct aptitude areas in one combined battery.", trap: "Independent tests measure only one aptitude; batteries measure several simultaneously.", concept: "Aptitude Tests"},
+  {q: "In Arthur Jensen's hierarchical model, 'rote learning and memory' falls under which level?", options: ["Level II – Cognitive Competence","Level I – Associative Learning","Level III – Creative Thinking","Level IV – Metacognition"], correct: 1, explanation: "Jensen's Level I is associative learning where output closely mirrors input — rote memory is a prime example.", trap: "Level II involves higher-order transformation; students may confuse with 'more complex = higher'.", concept: "Jensen's Hierarchical Model"},
+  {q: "Which of the following is NOT listed as a primary mental ability by Thurstone?", options: ["Word Fluency","Inductive Reasoning","Spatial Relations","Emotional Sensitivity"], correct: 3, explanation: "Thurstone's seven abilities are Verbal Comprehension, Numerical, Spatial, Perceptual Speed, Word Fluency, Memory, and Inductive Reasoning. Emotional Sensitivity is not one of them.", trap: "Students may confuse emotional intelligence components with Thurstone's abilities.", concept: "Thurstone's Primary Mental Abilities"},
+  {q: "In Sternberg's triarchic theory, which type of intelligence correlates most with academic success in school?", options: ["Contextual intelligence","Experiential intelligence","Componential intelligence","Emotional intelligence"], correct: 2, explanation: "Componential (analytical) intelligence involves analysing information logically — the skill most rewarded in traditional schooling.", trap: "Contextual is practical/street smart; Experiential is creative — both less traditional in school settings.", concept: "Triarchic Theory – Components"},
+  {q: "Which assessment method is described as 'an in-depth study of the individual in terms of psychological attributes and psychosocial environment'?", options: ["Interview","Observation","Case Study","Self-Report"], correct: 2, explanation: "A case study provides a holistic, in-depth analysis of an individual using multiple data sources.", trap: "An interview is one-to-one information gathering, not a complete in-depth study.", concept: "Assessment Methods – Case Study"},
+  {q: "The observational method's major limitation mentioned in NCERT is:", options: ["It takes too long","The observer has little control and reports may be subjectively interpreted","It cannot study social behaviour","It cannot use quantitative data"], correct: 1, explanation: "Observation lacks experimenter control and is prone to subjective interpretation by the observer.", trap: "Observation CAN study social behaviour — that's actually a strength. The limitation is lack of control and subjectivity.", concept: "Assessment Methods – Observation"},
+  {q: "IQ scores in a population approximate which type of statistical distribution?", options: ["Skewed distribution","Bimodal distribution","Normal (bell-shaped) curve","Uniform distribution"], correct: 2, explanation: "IQ scores follow a normal distribution — most people cluster around the mean of 100, with fewer at the extremes.", trap: "Students may say 'uniform' thinking everyone is spread equally — the bell curve means clustering at the centre.", concept: "IQ Distribution"},
+  {q: "What term is used for intelligence assessment that uses numbers, letters, or other symbols as content?", options: ["Visual content","Semantic content","Symbolic content","Behavioural content"], correct: 2, explanation: "In Guilford's model, symbolic content refers to information in the form of letters, numbers, or other symbols.", trap: "Semantic content uses words/meanings. Symbolic is specifically letters and numbers.", concept: "Guilford's SOI – Content"},
+  {q: "Giftedness is defined as exceptional general ability across many areas. 'Talent' differs by being:", options: ["Higher in intensity","Narrower — remarkable ability in a specific field","Genetically inherited only","Measured only by IQ tests"], correct: 1, explanation: "Talent = domain-specific excellence; Giftedness = broad exceptional ability across areas.", trap: "Both involve high ability — the difference is breadth vs. specificity.", concept: "Giftedness vs. Talent"},
+  {q: "Which IQ range is classified as 'Borderline' according to NCERT Table 1.1?", options: ["Below 70","70–79","80–89","90–109"], correct: 1, explanation: "IQ 70–79 is labelled Borderline, representing 6.7% of the population.", trap: "Below 70 is 'Intellectually Disabled'; 80–89 is 'Low Average'. Students frequently confuse these adjacent categories.", concept: "IQ Classification Table"},
+  {q: "The concept of 'situationism' in psychology holds that:", options: ["Heredity determines all behaviour","Personality traits are permanent","External circumstances influence behaviour more than personal traits","Cognitive abilities override personality"], correct: 2, explanation: "Situationism states that external situations shape behaviour — even a generally aggressive person may behave submissively in certain contexts.", trap: "Situationism doesn't say traits don't exist; it says situations can override traits.", concept: "Situationism"},
+  {q: "S.M. Mohsin's contribution to intelligence testing in India was:", options: ["Developing a non-verbal test for tribals","Making the first intelligence test in Hindi","Adapting the Stanford-Binet for Bengali speakers","Creating the Bhatia Battery"], correct: 1, explanation: "S.M. Mohsin made the pioneering attempt to construct an intelligence test in Hindi in the 1930s.", trap: "Mahalanobis worked on Bengali; C.H. Rice on Urdu and Punjabi.", concept: "Intelligence Testing in India"},
+  {q: "Raven's Progressive Matrices (RPM) is an example of which type of intelligence test?", options: ["Verbal group test","Individual performance test","Non-verbal test","Culture-biased test"], correct: 2, explanation: "RPM uses abstract patterns with no verbal component, making it a classic non-verbal intelligence test.", trap: "RPM can be administered in groups — it's non-verbal, not necessarily an individual test.", concept: "Types of Intelligence Tests"},
+  {q: "A value differs from interest in that a value is defined as:", options: ["A preference for one activity over another","An enduring belief about an ideal mode of behaviour","A measure of cognitive ability","An inherited personality characteristic"], correct: 1, explanation: "Values are enduring beliefs that guide behaviour and judgement; interests are activity preferences.", trap: "Both values and interests guide behaviour, but values are normative (ideal mode of behaviour) while interests are preferences.", concept: "Domains – Values vs. Interest"},
+  {q: "Which of the following is a characteristic of creativity tests that distinguishes them from intelligence tests?", options: ["They have strictly correct answers","They measure convergent thinking","They are open-ended and permit divergent thinking","They measure only verbal abilities"], correct: 2, explanation: "Creativity tests are open-ended and measure divergent thinking; intelligence tests are closed and focus on convergent thinking.", trap: "Intelligence tests are convergent (one right answer); creativity tests are divergent (many possible answers).", concept: "Creativity Tests"},
+  {q: "The PASS model was developed by:", options: ["Sternberg, Gardner, and Binet","Das, Naglieri, and Kirby","Thurstone, Jensen, and Guilford","Spearman, Wechsler, and Binet"], correct: 1, explanation: "J.P. Das, Jack Naglieri, and Kirby developed the PASS model in 1994.", trap: "Das is correctly associated with PASS, but students sometimes pair him with Spearman.", concept: "PASS Model – Authors"},
+  {q: "In Gardner's theory, which intelligence is most closely associated with philosophers and spiritual leaders?", options: ["Interpersonal","Naturalistic","Linguistic","Intrapersonal"], correct: 3, explanation: "Intrapersonal intelligence — understanding one's own feelings, identity, and meaning of life — is characteristic of philosophers and spiritual leaders.", trap: "Interpersonal is about understanding others; Intrapersonal is about understanding oneself.", concept: "Multiple Intelligences – Gardner"},
+  {q: "Rahul is great at academic tasks but cannot navigate social situations well. According to Gardner, this suggests he may be high on one type of intelligence but low on:", options: ["Linguistic intelligence","Spatial intelligence","Interpersonal intelligence","Naturalistic intelligence"], correct: 2, explanation: "Interpersonal intelligence involves understanding others' feelings and behaviours — critical for social navigation.", trap: "Students might choose linguistic (communication) but the core issue is reading social cues, not language.", concept: "Multiple Intelligences – Interpersonal"},
+  {q: "A teacher notes that Priya always finds new ways to solve maths problems that no textbook covers. According to Sternberg, Priya is demonstrating high:", options: ["Componential intelligence","Contextual intelligence","Experiential intelligence","Verbal intelligence"], correct: 2, explanation: "Experiential intelligence involves using past experience creatively to solve novel problems — exactly what Priya is doing.", trap: "Componential is analytical/school performance; Experiential is creative use of experience.", concept: "Triarchic Theory – Experiential"},
+  {q: "If heredity sets the 'range' for intellectual development, what does the environment do according to the consensus view in NCERT?", options: ["Determines the exact IQ score precisely","Shapes where within that range development actually falls","Has no effect if heredity is strong","Lowers IQ regardless of quality"], correct: 1, explanation: "Heredity sets a potential range; the quality of environment determines where within that range the individual actually develops.", trap: "Neither heredity nor environment alone determines IQ — they interact. Environment shapes outcomes within the genetic range.", concept: "Nature-Nurture and Intelligence"},
+  {q: "Studies on identical twins reared apart show an intelligence correlation of approximately 0.72. What does this suggest?", options: ["Environment has no role in intelligence","Heredity has a substantial influence even without shared environment","Adopted children are more intelligent","Fraternal twins are more similar than identical twins"], correct: 1, explanation: "A 0.72 correlation despite different environments shows significant genetic influence on intelligence.", trap: "It doesn't say environment has NO role — it says heredity has substantial influence.", concept: "Nature-Nurture – Twin Studies"},
+  {q: "A child from a low socioeconomic background is adopted into a high socioeconomic family. Based on NCERT evidence, we would expect:", options: ["No change in intelligence scores","A large increase in intelligence scores","A decrease in intelligence scores","Intelligence scores to become identical to adoptive parents"], correct: 1, explanation: "NCERT cites evidence that children from disadvantaged homes adopted into higher socioeconomic families show large increases in IQ scores.", trap: "Scores increase significantly, but they don't necessarily match adoptive parents exactly.", concept: "Environment and Intelligence"},
+  {q: "Kohs' Block Design Test requires subjects to arrange wooden blocks to match a design. This is an example of which type of test?", options: ["Verbal test","Culture-fair verbal test","Performance test","Group intelligence test"], correct: 2, explanation: "Performance tests require physical manipulation of objects — no written language needed. Kohs' test is a classic example.", trap: "It could be culture-fair, but the defining feature is that it's a 'performance' test.", concept: "Performance Intelligence Tests"},
+  {q: "Which of the following best demonstrates 'technological intelligence' as described in NCERT?", options: ["A village elder mediating community disputes","A software developer debugging code quickly and accurately","A farmer choosing crops based on weather patterns","A monk practising self-reflection daily"], correct: 1, explanation: "Technological intelligence emphasises speed, analysis, performance, and achievement orientation — coding debugging exemplifies this.", trap: "Farming shows practical environmental awareness; the monk shows self-reflection — these are non-western intelligence traits.", concept: "Culture and Intelligence – Technological"},
+  {q: "The fact that highly aggressive people may behave submissively with their boss demonstrates the concept of:", options: ["Trait theory","Situationism","Psychometric approach","Individual differences in intelligence"], correct: 1, explanation: "Situationism explains why even stable traits like aggression can be overridden by powerful situational factors.", trap: "This doesn't mean traits don't exist — situationism acknowledges traits but argues situations can dominate.", concept: "Situationism"},
+  {q: "Creativity tests use divergent thinking. Intelligence tests use convergent thinking. A test that asks 'List all possible uses for a brick' is measuring:", options: ["Logical reasoning","IQ","Divergent thinking / creativity","Spatial relations"], correct: 2, explanation: "Open-ended tasks with many valid answers measure divergent thinking, a core component of creativity tests.", trap: "Listing uses isn't about logic or IQ — it's about generating multiple original ideas.", concept: "Creativity vs. Intelligence Tests"}
+];
+
+let score = 0;
+let attempted = 0;
+
+function loadQuiz() {
+  const quiz = document.getElementById("quiz");
+
+  questions.forEach((q, index) => {
+    let html = `<div class="card">`;
+    html += `<p><b>Q${index+1}. ${q.q}</b></p>`;
+
+    q.options.forEach((opt, i) => {
+      html += `<button class="option" onclick="check(${index}, ${i}, this)">${opt}</button>`;
+    });
+
+    html += `<p id="res${index}"></p>`;
+
+    html += `<div class="explanation hidden" id="exp${index}">
+                <p><b>Explanation:</b> ${q.explanation}</p>
+                <p><b>Concept:</b> ${q.concept}</p>
+                <p><b>Trap:</b> ${q.trap}</p>
+             </div>`;
+    html += `</div>`;
+    quiz.innerHTML += html;
+  });
+}
+
+function check(qIndex, selected, btn) {
+  const res = document.getElementById("res" + qIndex);
+  const exp = document.getElementById("exp" + qIndex);
+
+  if (res.innerHTML !== "") return;
+
+  attempted++;
+
+  if (selected === questions[qIndex].correct) {
+    res.innerHTML = "✅ Correct";
+    res.className = "correct";
+    score++;
+  } else {
+    res.innerHTML = "❌ Incorrect";
+    res.className = "wrong";
+  }
+
+  exp.classList.remove("hidden");
+  disableOptions(qIndex);
+  updateProgress();
+}
+
+function disableOptions(qIndex) {
+  const buttons = document.querySelectorAll(`.card:nth-child(${qIndex+1}) .option`);
+  buttons.forEach(btn => btn.disabled = true);
+}
+
+function updateProgress() {
+  document.getElementById("progress").innerText = `Score: ${score} / ${attempted}`;
+}
+
+function goBack() {
+  window.location.href = "chapter1.html";
+}
+
+function goNext() {
+  window.location.href = "level1_set2.html";
+}
+
+loadQuiz();
+</script>
+</body>
+</html>
