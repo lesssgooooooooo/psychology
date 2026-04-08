@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz - Set 4</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #fffbf5; }
+  .card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+  .option { display: block; margin: 5px 0; padding: 10px; width: 100%; text-align: left; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 5px; }
+  .option:hover { background: #f0f0f0; }
+  .correct { color: #0d7a6e; font-weight: bold; margin-top: 10px; }
+  .wrong { color: #d94f4f; font-weight: bold; margin-top: 10px; }
+  .hidden { display: none; }
+  .explanation { background: #f8f9ff; padding: 10px; margin-top: 10px; border-left: 4px solid #f4a435; border-radius: 4px; }
+  #progress { font-size: 1.2em; font-weight: bold; margin-bottom: 20px; }
+  .nav { margin-top: 20px; display: flex; gap: 10px; }
+  .nav button { padding: 10px 20px; cursor: pointer; background: #0f0e17; color: #fff; border: none; border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<div id="progress">Score: 0 / 0</div>
+<div id="quiz"></div>
+<div class="nav">
+  <button onclick="goBack()">Go Back</button>
+  <button onclick="goNext()">Finish Quiz</button>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Which is the MOST commonly used multiple aptitude battery in educational settings?",
+    options: ["GATB (General Aptitude Test Battery)","ASVAB (Armed Services Vocational Aptitude Battery)","DAT (Differential Aptitude Tests)","CAS (Cognitive Assessment System)"],
+    correct: 2,
+    explanation: "NCERT specifically states DAT is most commonly used in educational settings among the major aptitude batteries.",
+    trap: "GATB and ASVAB are also listed but used in occupational/military settings, not primarily in schools.",
+    concept: "Aptitude Tests – DAT in Education"
+  },
+  {
+    q: "When a child raised in deprivation is provided rich nutrition, stable family, and quality schooling, what does NCERT predict?",
+    options: ["IQ remains unchanged due to genetics","IQ decreases due to over-stimulation","Intelligence increases","Aptitude increases but not intelligence"],
+    correct: 2,
+    explanation: "NCERT states rich nutrition, good family background, and quality schooling increase intelligence.",
+    trap: "Genetics set limits, but environments can move intelligence significantly within those limits — upward with enrichment.",
+    concept: "Environment and Intelligence"
+  },
+  {
+    q: "In Guilford's model, 'behavioural' content refers to:",
+    options: ["Physical behaviours and motor skills","Information about people's behaviour, attitudes, and needs","Social learning theories","Behaviour modification techniques"],
+    correct: 1,
+    explanation: "Behavioural content in Guilford's SOI = information about people's behaviour, attitudes, and needs — social/interpersonal information.",
+    trap: "Behavioural content is NOT about motor skills or learning theories — it's specifically social-interpersonal information.",
+    concept: "Guilford's SOI – Behavioural Content"
+  },
+  {
+    q: "To predict whether Amara will succeed as a pilot, a psychologist would most appropriately use:",
+    options: ["A personality test","An aptitude test measuring spatial and mechanical abilities","An IQ test alone","An interest inventory"],
+    correct: 1,
+    explanation: "Pilot success requires spatial (navigation) and mechanical abilities — these are aptitude domains, not general IQ or interest.",
+    trap: "Interest tells us if she wants to fly; aptitude tells us if she CAN learn to fly. Career prediction = aptitude.",
+    concept: "Aptitude Tests – Career Prediction"
+  },
+  {
+    q: "Which of the following would be classified as 'informal assessment' in psychological testing?",
+    options: ["Administering standardised intelligence tests","A teacher judging a student as 'smart' based on class performance","Using validated personality inventories","Conducting a structured interview with a psychological protocol"],
+    correct: 1,
+    explanation: "A teacher's subjective judgement based on observation is informal assessment — not objective, not standardised.",
+    trap: "Standardised tests and structured interviews are formal. Teacher judgement without a protocol is informal.",
+    concept: "Formal vs. Informal Assessment"
+  },
+  {
+    q: "The NLEPT (National Library of Educational and Psychological Tests) is housed at which institution?",
+    options: ["University of Delhi","Indian Statistical Institute","National Council of Educational Research and Training (NCERT)","All India Institute of Medical Sciences"],
+    correct: 2,
+    explanation: "NLEPT is at NCERT, which has documented Indian tests and published handbooks on intelligence, aptitude, and personality.",
+    trap: "NCERT is primarily known for curricula; students may not associate it with NLEPT.",
+    concept: "Intelligence Testing in India – NLEPT"
+  },
+  {
+    q: "J.M. Ojha's contribution to Indian aptitude testing was:",
+    options: ["Developing the first verbal IQ test in Hindi","Creating the Draw-a-Man Test","Developing an Indian adaptation of the Differential Aptitude Tests (DAT)","Standardising RPM for Indian populations"],
+    correct: 2,
+    explanation: "J.M. Ojha developed the Indian adaptation of DAT for measuring multiple aptitudes in Indian educational settings.",
+    trap: "DAT adaptation is Ojha; Draw-a-Man is Pathak; Hindi IQ test is Mohsin.",
+    concept: "Indian Aptitude Testing – Ojha"
+  },
+  {
+    q: "Which statement about creativity and heredity is consistent with NCERT?",
+    options: ["Heredity has no role in creativity","Only environment shapes creativity","Both heredity and environment determine creativity","Creativity is entirely determined by IQ, which is heritable"],
+    correct: 2,
+    explanation: "NCERT states: there is no disagreement that creativity is determined by BOTH heredity and environment.",
+    trap: "Either extreme (only genes or only environment) is incorrect. NCERT takes an interactionist view.",
+    concept: "Creativity – Heredity and Environment"
+  },
+  {
+    q: "The highly talented individuals in a specific domain (e.g., music prodigies) are sometimes called:",
+    options: ["Savants","Geniuses","Prodigies","Polymaths"],
+    correct: 2,
+    explanation: "NCERT uses the term 'prodigies' for highly talented individuals who show exceptional ability in a specific field.",
+    trap: "'Savant' refers to extraordinary ability in narrow areas with other cognitive limitations; 'prodigy' is NCERT's term here.",
+    concept: "Talent and Giftedness – Prodigies"
+  },
+  {
+    q: "Interest differs from aptitude in that interest is a _____ while aptitude is a _____.",
+    options: ["Potential; preference","Preference; potential","Belief; preference","Potential; belief"],
+    correct: 1,
+    explanation: "Interest = preference for an activity; Aptitude = underlying potential to perform that activity.",
+    trap: "Students often reverse these. Interest = what you WANT to do; Aptitude = what you CAN learn to do.",
+    concept: "Interest vs. Aptitude"
+  },
+  {
+    q: "If an IQ test was developed in Europe for middle-class populations, which group of students would likely be most disadvantaged when taking this test?",
+    options: ["European middle-class students","Students from Asian or African cultural backgrounds","Students who score high on the g-factor","Students with high spatial intelligence"],
+    correct: 1,
+    explanation: "Tests developed in western middle-class cultural contexts systematically disadvantage students from Asian/African backgrounds whose cultural knowledge is different.",
+    trap: "European middle-class students would be ADVANTAGED, not disadvantaged. Cultural fit matters.",
+    concept: "Culture-Biased Intelligence Tests"
+  },
+  {
+    q: "Which type of intelligence would most help a scientist discover an entirely new theory from observing existing patterns?",
+    options: ["Contextual intelligence","Componential intelligence","Experiential intelligence","Intrapersonal intelligence"],
+    correct: 2,
+    explanation: "Experiential intelligence uses past experience creatively to produce new discoveries and inventions — the hallmark of theoretical scientific breakthroughs.",
+    trap: "Componential = analytical thinking used in school. Creative discovery = experiential.",
+    concept: "Triarchic Theory – Experiential"
+  },
+  {
+    q: "A person who can easily recognise the mood of a meeting from subtle body language, tone of voice, and facial expressions demonstrates which EI skill?",
+    options: ["Self-regulation","Self-monitoring of own emotions","Perceiving and being sensitive to emotions in others","Using emotions to guide thinking"],
+    correct: 2,
+    explanation: "Box 1.2 in NCERT lists 'perceive and be sensitive to emotions in others by noting body language, voice, and facial expressions' as a key EI skill.",
+    trap: "Self-regulation is managing one's OWN emotions; this scenario is about perceiving others' emotional states.",
+    concept: "Emotional Intelligence – Perceiving Others"
+  },
+  {
+    q: "The fact that variability exists across all species and individuals is called what in NCERT?",
+    options: ["Situationism","Individual differences","Variability is a fact of nature","Normal distribution"],
+    correct: 2,
+    explanation: "NCERT states 'Variability is a fact of nature, and individuals are no exception to this' — it's the foundational premise of individual differences.",
+    trap: "This is more foundational than 'individual differences' — it's the biological-natural principle underlying them.",
+    concept: "Individual Differences – Foundational Premise"
+  },
+  {
+    q: "An intelligence test item that is answered correctly by most test-takers from one cultural group but poorly by another is said to exhibit:",
+    options: ["High reliability","High validity","Cultural bias","Cultural fairness"],
+    correct: 2,
+    explanation: "When test items systematically favour one cultural group over another, the test is culturally biased.",
+    trap: "Cultural fairness is the GOAL (reducing bias), not what this scenario describes.",
+    concept: "Culture-Biased Tests"
+  },
+  {
+    q: "A student is told about an upcoming test by the teacher. According to PASS, what does this information primarily do?",
+    options: ["Activates successive processing","Triggers planning","Creates arousal that focuses attention on relevant chapters","Enhances simultaneous processing"],
+    correct: 2,
+    explanation: "NCERT's example directly: being told about a test arouses the student to attend to specific chapters — arousal-attention function.",
+    trap: "Planning comes AFTER attention is engaged. The first response to the announcement is arousal-attention.",
+    concept: "PASS Model – Arousal Example"
+  },
+  {
+    q: "A test that can be administered to several people at the same time is called a:",
+    options: ["Performance test","Individual test","Group test","Culture-fair test"],
+    correct: 2,
+    explanation: "Group intelligence tests are administered to multiple people simultaneously — more efficient but less personal than individual tests.",
+    trap: "Performance test refers to the type of items (manipulation tasks), not the administration format.",
+    concept: "Intelligence Tests – Group Administration"
+  },
+  {
+    q: "Creativity is MOST likely to move from non-verbal to verbal expression when:",
+    options: ["The child is given more art materials","The child's physical coordination improves","Language and intellectual functions are fully developed and knowledge store is adequate","The child learns to read at an advanced level"],
+    correct: 2,
+    explanation: "NCERT states: when language and intellectual functions are fully developed and knowledge is adequate, creativity is expressed verbally.",
+    trap: "Reading fluency is part of this but not sufficient alone; it's the broader language + intellectual + knowledge combination.",
+    concept: "Creativity Development – Verbal Expression"
+  },
+  {
+    q: "An individual who scores high on the Emotional Quotient (EQ) would likely demonstrate all of the following EXCEPT:",
+    options: ["Sensitivity to others' emotional cues","Ability to regulate their own emotional responses","Consistently solving complex algebraic problems","Relating emotions to thoughts for better decision-making"],
+    correct: 2,
+    explanation: "Algebraic problem-solving is a cognitive/IQ task. EQ measures emotional intelligence, not mathematical reasoning.",
+    trap: "All the other options are directly from Box 1.2 in NCERT as EI characteristics.",
+    concept: "Emotional Intelligence – Characteristics"
+  },
+  {
+    q: "A child who has difficulty learning simple skills and shows IQ of 45, needs moderate supervision, and can learn basic communication is classified under which disability level?",
+    options: ["Mild","Moderate","Severe","Profound"],
+    correct: 1,
+    explanation: "IQ 35–55 = moderate disability; can learn self-care and basic communication with moderate supervision.",
+    trap: "Mild can hold jobs and be fairly independent; profound needs constant institutional care. Moderate is the middle ground with supervision.",
+    concept: "Intellectual Disability – Moderate Level"
+  },
+  {
+    q: "Arrange the following intelligence theories in HISTORICAL order (earliest to latest): (I) Binet's uni-factor theory (II) Spearman's two-factor theory (III) Gardner's multiple intelligences (IV) Sternberg's triarchic theory",
+    options: ["I → II → III → IV","II → I → IV → III","I → II → IV → III","II → III → I → IV"],
+    correct: 0,
+    explanation: "Binet (early 1900s) → Spearman (1927) → Gardner and Sternberg (1980s–1985). Historical sequence: I → II → III/IV.",
+    trap: "Gardner (1983) and Sternberg (1985) are close in time; but Binet → Spearman → Gardner → Sternberg is the correct order.",
+    concept: "Timeline of Intelligence Theories"
+  },
+  {
+    q: "Which of the following is the CORRECT ascending order of IQ ranges from lowest to highest category?",
+    options: ["Borderline → Mild Disability → Moderate → Severe → Profound","Profound → Severe → Moderate → Mild Disability → Borderline","Average → Low Average → Borderline → Mild Disability → Profound","Profound → Severe → Borderline → Mild Disability → Low Average"],
+    correct: 1,
+    explanation: "In ascending order of intellectual disability severity: Profound (lowest IQ, below 20–25) → Severe → Moderate → Mild → Borderline.",
+    trap: "Students confuse the disability categories with the IQ table categories. Profound = LOWEST IQ.",
+    concept: "Intellectual Disability – Severity Ordering"
+  },
+  {
+    q: "In Sternberg's triarchic theory, which sequence correctly represents processing within componential intelligence?",
+    options: ["Performance → Meta → Knowledge Acquisition","Meta → Knowledge Acquisition → Performance","Knowledge Acquisition → Performance → Meta","Performance → Knowledge Acquisition → Meta"],
+    correct: 1,
+    explanation: "Meta-components PLAN; Knowledge Acquisition learns the approach; Performance actually executes it.",
+    trap: "You can't perform before planning and learning. Meta (planning) → Learning → Performance.",
+    concept: "Triarchic Theory – Componential Sequence"
+  },
+  {
+    q: "Classify the following under GARDNER'S 8 intelligences: (1) Composing a symphony (2) Meditating on life's meaning (3) Classifying rock specimens (4) Writing a novel",
+    options: ["Musical; Intrapersonal; Naturalistic; Linguistic","Musical; Interpersonal; Spatial; Linguistic","Logical; Intrapersonal; Naturalistic; Linguistic","Musical; Intrapersonal; Logical-Mathematical; Linguistic"],
+    correct: 0,
+    explanation: "Symphony = Musical; Meditation/self-reflection = Intrapersonal; Classifying rocks = Naturalistic; Novel writing = Linguistic.",
+    trap: "Classifying rocks requires naturalistic (nature-discrimination), not spatial (mental images).",
+    concept: "Multiple Intelligences – Classification"
+  },
+  {
+    q: "Which of the following is the correct PASS model sequence when a student prepares for an exam?",
+    options: ["Planning → Simultaneous Processing → Arousal → Successive Processing","Arousal → Attention → Simultaneous/Successive Processing → Planning","Simultaneous → Arousal → Planning → Successive","Planning → Arousal → Simultaneous → Successive"],
+    correct: 1,
+    explanation: "First, arousal-attention activates; information is coded (simultaneously or successively); then planning organises the strategy.",
+    trap: "Planning isn't first — you need to be aroused and attending before you can effectively plan.",
+    concept: "PASS Model – Process Sequence"
+  },
+  {
+    q: "Classify the following assessment methods: (1) Teacher watches students during project work (2) Student fills out a self-rating form (3) Psychologist interviews a child's parents (4) IQ test administered",
+    options: ["Observation; Self-Report; Interview; Psychological Test","Interview; Self-Report; Observation; Case Study","Observation; Interview; Self-Report; Psychological Test","Self-Report; Observation; Interview; Aptitude Test"],
+    correct: 0,
+    explanation: "(1) Systematic watching = Observation; (2) Self-rating form = Self-Report; (3) Parent interview = Interview; (4) IQ test = Psychological Test.",
+    trap: "Teacher watching is observation (not self-report); parent interviews are interviews (not case study by themselves).",
+    concept: "Assessment Methods – Classification"
+  },
+  {
+    q: "Arrange psychologists in order of their theoretical contribution: (A) proposed g and s factors (B) proposed 8 multiple intelligences (C) proposed PASS model (D) proposed 7 primary mental abilities",
+    options: ["A → D → B → C","D → A → C → B","B → A → D → C","C → D → A → B"],
+    correct: 0,
+    explanation: "Spearman (A, g/s factors 1927) → Thurstone (D, 7 abilities) → Gardner (B, 8 intelligences 1983) → Das et al. (C, PASS 1994).",
+    trap: "Das's PASS (1994) is the most recent; Spearman's two-factor theory is oldest of these four.",
+    concept: "Theories of Intelligence – Chronological Order"
+  },
+  {
+    q: "Classify the following tests: (1) Raven's Progressive Matrices (2) Bihar Test of Intelligence (3) Bhatia's Battery (4) Kohs' Block Design",
+    options: ["Non-verbal; Verbal; Performance; Performance","Verbal; Verbal; Performance; Non-verbal","Non-verbal; Verbal; Performance; Non-verbal","Performance; Verbal; Non-verbal; Performance"],
+    correct: 0,
+    explanation: "RPM = non-verbal (patterns); Bihar Test = verbal (language-based); Bhatia's Battery = performance; Kohs' Block = performance.",
+    trap: "RPM uses abstract patterns (non-verbal), NOT performance objects; Kohs and Bhatia require physical manipulation (performance).",
+    concept: "Types of Intelligence Tests – Classification"
+  },
+  {
+    q: "Sequence of IQ interpretation: A child has CA = 10, MA = 13. What is the correct sequence of steps to determine IQ and classify?",
+    options: ["Compute IQ → classify → label the child permanently","Apply formula (MA/CA × 100) → get IQ 130 → classify as 'Very Superior'","Apply formula (CA/MA × 100) → get IQ 77 → classify as Borderline","Add MA + CA → divide by 2 → get average IQ of 115"],
+    correct: 1,
+    explanation: "IQ = (13/10) × 100 = 130. Per Table 1.1, 130 exactly is at the boundary; above 130 = Very Superior.",
+    trap: "Common error: reversing to CA/MA. Correct: MA in numerator.",
+    concept: "IQ Calculation and Classification"
+  },
+  {
+    q: "Classify these characteristics into TWO groups: (A) sensitivity to others' emotions, (B) self-regulation of own emotions, (C) g-factor performance, (D) reasoning with symbols → EI traits vs. IQ-related traits",
+    options: ["EI: A, B; IQ: C, D","EI: A, C; IQ: B, D","EI: B, D; IQ: A, C","EI: A, D; IQ: B, C"],
+    correct: 0,
+    explanation: "A (perceiving others' emotions) and B (regulating own emotions) = Emotional Intelligence traits. C (g-factor) and D (symbolic reasoning) = traditional IQ-related.",
+    trap: "Students may group self-regulation with IQ (discipline = intelligent). But emotional self-regulation is explicitly an EI skill.",
+    concept: "EI vs. IQ – Trait Classification"
+  },
+  {
+    q: "Arrange the following from BROADEST to NARROWEST concept: Intelligence, Aptitude, Specific Aptitude (e.g., Mechanical Aptitude)",
+    options: ["Intelligence > Aptitude > Specific Aptitude","Aptitude > Intelligence > Specific Aptitude","Specific Aptitude > Aptitude > Intelligence","Intelligence > Specific Aptitude > Aptitude"],
+    correct: 0,
+    explanation: "Intelligence is the most general ability; Aptitude covers specific domains; a specific aptitude like Mechanical is narrower still.",
+    trap: "Students confuse 'aptitude' and 'intelligence' breadth. Intelligence is always broader.",
+    concept: "Intelligence > Aptitude > Specific Aptitude"
+  },
+  {
+    q: "Which is the correct sequence in assessment: Purpose → Assessment → Prediction → ___?",
+    options: ["Labelling","Intervention","IQ calculation","Group comparison"],
+    correct: 1,
+    explanation: "NCERT outlines: identify purpose → assess → predict behaviour → intervene to change if needed.",
+    trap: "Assessment leads to prediction, and prediction leads to intervention if outcome is undesired — not labelling.",
+    concept: "Purpose of Psychological Assessment"
+  },
+  {
+    q: "Classify each intelligence as Psychometric Approach or Information-Processing Approach: (1) Spearman's two-factor theory (2) Sternberg's triarchic theory (3) Thurstone's primary mental abilities (4) Das's PASS model",
+    options: ["Psychometric: 1, 3; Info-Processing: 2, 4","Psychometric: 1, 2; Info-Processing: 3, 4","Psychometric: 2, 4; Info-Processing: 1, 3","Psychometric: 1, 4; Info-Processing: 2, 3"],
+    correct: 0,
+    explanation: "Psychometric approaches use factor analysis to describe intelligence structure (Spearman, Thurstone); Information-processing describes the processes used (Sternberg, Das).",
+    trap: "Gardner could go either way, but NCERT classifies Sternberg and Das as information-processing; Spearman and Thurstone as psychometric.",
+    concept: "Theoretical Approaches – Classification"
+  },
+  {
+    q: "In Thurstone's seven primary abilities, which pair is correctly matched?",
+    options: ["Memory → accuracy in recalling information; Word Fluency → using words flexibly","Verbal Comprehension → numerical accuracy; Spatial → memory","Inductive Reasoning → visual patterns; Perceptual Speed → number facts","Numerical Abilities → spatial relations; Memory → word usage"],
+    correct: 0,
+    explanation: "Memory = recall accuracy; Word Fluency = flexible word use. Both definitions are directly from NCERT.",
+    trap: "Numerical abilities ≠ spatial; verbal comprehension ≠ numerical accuracy. Only option A has correctly paired abilities.",
+    concept: "Thurstone – Primary Ability Definitions"
+  },
+  {
+    q: "Which sequence correctly reflects the components of contextual intelligence?",
+    options: ["Adapt → Shape → Select (or any combination based on situation)","Plan → Execute → Evaluate","Attend → Code → Plan","Acquire → Apply → Evaluate"],
+    correct: 0,
+    explanation: "Contextual intelligence involves three strategies in any order: adapting to, shaping/modifying, or selecting a more favourable environment.",
+    trap: "Plan-Execute-Evaluate is Sternberg's componential sub-components, not contextual strategies.",
+    concept: "Contextual Intelligence – Strategies"
+  },
+  {
+    q: "Place these domains of psychological attributes in the order mentioned in NCERT: Values, Aptitude, Personality, Intelligence, Interest",
+    options: ["Intelligence, Aptitude, Interest, Personality, Values","Aptitude, Values, Intelligence, Interest, Personality","Intelligence, Values, Aptitude, Personality, Interest","Interest, Intelligence, Aptitude, Values, Personality"],
+    correct: 0,
+    explanation: "NCERT lists the five domains in order: Intelligence (1), Aptitude (2), Interest (3), Personality (4), Values (5).",
+    trap: "The order matters for understanding NCERT's structure; students often rearrange from memory.",
+    concept: "Domains of Psychological Attributes – Order"
+  },
+  {
+    q: "Classify the following as FORMAL or INFORMAL assessment: (A) Teacher impression from classroom, (B) Standardised IQ test, (C) Psychologist's structured interview, (D) Parent's casual opinion of child's intelligence",
+    options: ["Formal: B, C; Informal: A, D","Formal: A, B; Informal: C, D","Formal: B, D; Informal: A, C","Formal: A, C; Informal: B, D"],
+    correct: 0,
+    explanation: "Formal = objective, standardised, organised (IQ test, structured interview). Informal = subjective and variable (teacher impression, parent opinion).",
+    trap: "Parent opinion is informal even if detailed; structured interviews using protocols are formal.",
+    concept: "Formal vs. Informal Assessment"
+  },
+  {
+    q: "Arrange the following in order of increasingly restricted scope: IQ test → Aptitude test battery → Specific aptitude test",
+    options: ["IQ test (broadest) → Aptitude battery (multiple domains) → Specific aptitude (narrowest)","Specific aptitude → Aptitude battery → IQ test","Aptitude battery → IQ test → Specific aptitude","IQ test → Specific aptitude → Aptitude battery"],
+    correct: 0,
+    explanation: "IQ = broadest general ability; Aptitude battery = several specific domains; Specific aptitude = single narrow domain.",
+    trap: "Aptitude battery covers more than a specific test but less than general IQ. The order from broad to narrow is correct in option A.",
+    concept: "Assessment Scope – IQ, Aptitude Battery, Specific Aptitude"
+  },
+  {
+    q: "Classify these characteristics: (1) non-conformist thinking, (2) high intrinsic motivation, (3) convergent reasoning, (4) preference for novelty → Gifted vs. Creative traits",
+    options: ["Gifted: 2, 4; Creative: 1, 3","Gifted: 1, 2, 4; Creative: 1, 3 (overlap possible)","Gifted: 2, 4; Creative: 1 (non-conformist is creative; 3 is intelligence trait)","Gifted: 1, 2, 3, 4; Creative: none separately"],
+    correct: 2,
+    explanation: "NCERT lists non-conformist thinking as a characteristic of gifted children, but convergent reasoning is an intelligence (IQ) trait, not creativity. Creativity uses divergent thinking.",
+    trap: "Non-conformist thinking appears in NCERT's gifted characteristics list but also characterises creative people. Convergent = intelligence, divergent = creativity.",
+    concept: "Gifted vs. Creative Traits"
+  },
+  {
+    q: "Which of the following correctly classifies Gardner's eight intelligences by the professionals most associated with each?",
+    options: ["Pilots → Naturalistic; Poets → Linguistic; Scientists → Logical-Mathematical; Athletes → Bodily-Kinaesthetic","Pilots → Spatial; Poets → Linguistic; Scientists → Logical-Mathematical; Athletes → Bodily-Kinaesthetic","Pilots → Bodily-Kinaesthetic; Poets → Linguistic; Scientists → Spatial; Athletes → Logical-Mathematical","Pilots → Interpersonal; Poets → Intrapersonal; Scientists → Linguistic; Athletes → Spatial"],
+    correct: 1,
+    explanation: "NCERT: Pilots/sailors/architects = Spatial; Poets/writers = Linguistic; Scientists = Logical-Mathematical; Athletes/dancers = Bodily-Kinaesthetic.",
+    trap: "Pilots use spatial (navigation), NOT bodily-kinaesthetic (physical movement). This is a common confusion.",
+    concept: "Multiple Intelligences – Professional Associations"
+  },
+  {
+    q: "Both aptitude and interest guide career decisions. However, a student who WANTS to be a musician but cannot develop musical skills despite training demonstrates a mismatch between:",
+    options: ["Intelligence and creativity","Interest (high) and aptitude (low)","Values and personality","EQ and IQ"],
+    correct: 1,
+    explanation: "Interest = desire; Aptitude = potential to acquire skill. Having the desire without the potential = interest without matching aptitude.",
+    trap: "Students often conflate wanting to do something (interest) with being able to do it (aptitude).",
+    concept: "Interest vs. Aptitude – Mismatch"
+  },
+  {
+    q: "Both Spearman's g-factor and Thurstone's primary mental abilities use factor analysis. The KEY difference is:",
+    options: ["Spearman studied adults; Thurstone studied children","Spearman identified one general + specific factors; Thurstone found seven independent primary abilities","Thurstone used IQ; Spearman used EQ","Spearman rejected factor analysis; Thurstone developed it"],
+    correct: 1,
+    explanation: "Same method, different conclusions: Spearman → 1 general + specifics; Thurstone → 7 independent primary abilities. Thurstone DISPUTED Spearman's single g.",
+    trap: "Both used factor analysis — the difference is in what they found, not the method used.",
+    concept: "Spearman vs. Thurstone"
+  },
+  {
+    q: "Both giftedness and high creativity involve exceptional performance. What most clearly differentiates them?",
+    options: ["Gifted individuals always have higher IQ than creative ones","Giftedness = exceptional general ability across many areas; Creativity = novel production in specific areas","Creativity is always linked to arts; giftedness to sciences","Both are identical and the terms are fully interchangeable"],
+    correct: 1,
+    explanation: "Giftedness = broad high ability; Creativity = producing something new and unique (not necessarily across all areas). A gifted child isn't necessarily highly creative.",
+    trap: "NCERT explicitly says talent and giftedness are NOT identical, and high IQ does not ensure creativity.",
+    concept: "Giftedness vs. Creativity"
+  },
+  {
+    q: "Gardner's Interpersonal and Intrapersonal intelligences are often confused. Which example correctly distinguishes them?",
+    options: ["A therapist who reads clients' emotions = Intrapersonal; a meditating monk = Interpersonal","A therapist who reads clients' emotions = Interpersonal; a meditating monk with deep self-knowledge = Intrapersonal","Both describe the same intelligence — social-emotional","Interpersonal = individual; Intrapersonal = group"],
+    correct: 1,
+    explanation: "Inter = between people (therapist understanding clients); Intra = within oneself (monk's self-knowledge and identity).",
+    trap: "The prefix is key: Inter = between (others), Intra = within (self).",
+    concept: "Interpersonal vs. Intrapersonal Intelligence"
+  },
+  {
+    q: "Both Sternberg's experiential intelligence and componential intelligence involve solving problems. How do they differ?",
+    options: ["Experiential uses prior experience creatively for novel problems; componential involves logical analysis of information","Componential uses creativity; experiential uses logic","They are the same; Sternberg uses both terms interchangeably","Experiential is for school tasks; componential is for creative arts"],
+    correct: 0,
+    explanation: "Componential = analytical reasoning to solve problems; Experiential = drawing creatively from past experiences for novel problems.",
+    trap: "Both solve problems but through different means: componential = logic, experiential = creative use of experience.",
+    concept: "Triarchic Theory – Experiential vs. Componential"
+  },
+  {
+    q: "Both culture-fair and culture-biased tests are intelligence tests. What distinguishes a culture-fair test?",
+    options: ["It is given only to individuals of one culture","It contains items common to all cultures or requires no language to be answered","It favours the culture in which it was developed","It is less reliable than culture-biased tests"],
+    correct: 1,
+    explanation: "Culture-fair tests use items relevant to all cultures or remove language requirements to reduce cultural advantage.",
+    trap: "Culture-biased tests favour their origin culture; culture-fair tests work to remove such advantage.",
+    concept: "Culture-Fair vs. Culture-Biased Tests"
+  },
+  {
+    q: "Both the IQ test and the aptitude test involve testing cognitive abilities. The key difference is:",
+    options: ["IQ tests are more accurate","IQ tests measure general current capacity; aptitude tests measure potential for specific skills with training","Aptitude tests give IQ scores","IQ tests predict career success directly; aptitude tests do not"],
+    correct: 1,
+    explanation: "IQ = general cognitive capacity (current); Aptitude = potential for specific skill acquisition given training (future-oriented and domain-specific).",
+    trap: "Both are cognitive, but IQ = general + current; aptitude = specific + potential with training.",
+    concept: "IQ Test vs. Aptitude Test"
+  },
+  {
+    q: "Simultaneous and successive processing in the PASS model both involve coding information. What correctly differentiates them?",
+    options: ["Simultaneous = pattern/relational integration; Successive = serial/sequential memory","Simultaneous = slow; Successive = fast","Simultaneous = verbal; Successive = non-verbal","Both are identical processes used for different age groups"],
+    correct: 0,
+    explanation: "Simultaneous = integrating information into a coherent pattern; Successive = remembering in serial order where one cues the next.",
+    trap: "Both are coding processes but the MODE is different: integrated pattern vs. serial chain.",
+    concept: "PASS Model – Simultaneous vs. Successive"
+  },
+  {
+    q: "EQ and IQ are both measured using tests. What is the core conceptual difference?",
+    options: ["IQ measures emotional regulation; EQ measures academic potential","EQ measures the ability to process emotional information; IQ measures cognitive ability to understand and reason","EQ is higher in intelligent people; IQ is higher in emotional people","Both are different names for the same construct"],
+    correct: 1,
+    explanation: "IQ = cognitive reasoning, understanding, and problem-solving. EQ = processing, appraisal, and regulation of emotional information.",
+    trap: "They can co-occur in an individual, but they measure entirely different psychological domains.",
+    concept: "IQ vs. EQ"
+  },
+  {
+    q: "Both verbal and performance intelligence tests measure intelligence. What most clearly distinguishes them?",
+    options: ["Verbal tests are more reliable; performance tests are less valid","Verbal tests require language-based responses; performance tests require physical manipulation of objects with no language required","Performance tests are only for illiterate populations","Verbal tests use multiple choice; performance tests use essay format"],
+    correct: 1,
+    explanation: "Verbal tests need language; performance tests use physical object manipulation — no written language needed, making them usable across literacy levels.",
+    trap: "Performance tests aren't only for illiterates; they're used for cross-cultural and non-language assessment of anyone.",
+    concept: "Verbal vs. Performance Intelligence Tests"
+  }
+];
+
+let score = 0;
+let attempted = 0;
+
+function loadQuiz() {
+  const quiz = document.getElementById("quiz");
+
+  questions.forEach((q, index) => {
+    let html = `<div class="card">`;
+    html += `<p><b>Q${index + 151}. ${q.q}</b></p>`;
+
+    q.options.forEach((opt, i) => {
+      html += `<button class="option" onclick="check(${index}, ${i}, this)">${opt}</button>`;
+    });
+
+    html += `<p id="res${index}"></p>`;
+    html += `<div class="explanation hidden" id="exp${index}">
+                <p><b>Explanation:</b> ${q.explanation}</p>
+                <p><b>Concept:</b> ${q.concept}</p>
+                <p><b>Trap:</b> ${q.trap}</p>
+             </div>`;
+    html += `</div>`;
+    quiz.innerHTML += html;
+  });
+}
+
+function check(qIndex, selected, btn) {
+  const res = document.getElementById("res" + qIndex);
+  const exp = document.getElementById("exp" + qIndex);
+
+  if (res.innerHTML !== "") return;
+
+  attempted++;
+
+  if (selected === questions[qIndex].correct) {
+    res.innerHTML = "✅ Correct";
+    res.className = "correct";
+    score++;
+  } else {
+    res.innerHTML = "❌ Incorrect";
+    res.className = "wrong";
+  }
+
+  exp.classList.remove("hidden");
+  disableOptions(qIndex);
+  updateProgress();
+}
+
+function disableOptions(qIndex) {
+  const buttons = document.querySelectorAll(`.card:nth-child(${qIndex+1}) .option`);
+  buttons.forEach(btn => btn.disabled = true);
+}
+
+function updateProgress() {
+  document.getElementById("progress").innerText = `Score: ${score} / ${attempted}`;
+}
+
+function goBack() {
+  window.location.href = "level1_set3.html";
+}
+
+function goNext() {
+  alert("You have completed all 200 questions!");
+}
+
+loadQuiz();
+</script>
+</body>
+</html>

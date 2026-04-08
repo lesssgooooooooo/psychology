@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz - Set 3</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #fffbf5; }
+  .card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+  .option { display: block; margin: 5px 0; padding: 10px; width: 100%; text-align: left; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 5px; }
+  .option:hover { background: #f0f0f0; }
+  .correct { color: #0d7a6e; font-weight: bold; margin-top: 10px; }
+  .wrong { color: #d94f4f; font-weight: bold; margin-top: 10px; }
+  .hidden { display: none; }
+  .explanation { background: #f8f9ff; padding: 10px; margin-top: 10px; border-left: 4px solid #f4a435; border-radius: 4px; }
+  #progress { font-size: 1.2em; font-weight: bold; margin-bottom: 20px; }
+  .nav { margin-top: 20px; display: flex; gap: 10px; }
+  .nav button { padding: 10px 20px; cursor: pointer; background: #0f0e17; color: #fff; border: none; border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<div id="progress">Score: 0 / 0</div>
+<div id="quiz"></div>
+<div class="nav">
+  <button onclick="goBack()">Go Back</button>
+  <button onclick="goNext()">Go Next</button>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Das, Naglieri, and Kirby developed PASS model in 1994. The 'A' in PASS stands for:",
+    options: ["Aptitude","Ability","Attention-Arousal","Analytical"],
+    correct: 2,
+    explanation: "PASS = Planning, Attention-Arousal, Simultaneous, Successive — the four cognitive processes in the model.",
+    trap: "Aptitude and Ability are both plausible-sounding but incorrect; the A specifically stands for Attention-Arousal.",
+    concept: "PASS Model – Acronym"
+  },
+  {
+    q: "Binet's earliest theory is called the 'Uni or one-factor theory' because:",
+    options: ["He believed only one person could have intelligence","He tested intelligence in only one language","He conceived intelligence as one similar set of abilities applicable to all problems","He developed only one intelligence test"],
+    correct: 2,
+    explanation: "Binet conceptualised intelligence as a unified set of abilities that could be deployed across any problem — hence one factor.",
+    trap: "It's about the conceptual unity of abilities, not about one language or one test.",
+    concept: "Binet – Uni-Factor Theory"
+  },
+  {
+    q: "Thurstone's primary mental abilities include 'Perceptual Speed'. What does this specifically measure?",
+    options: ["How fast a person reads","Speed in perceiving details of information","Physical reaction time to stimuli","Speed in solving number problems"],
+    correct: 1,
+    explanation: "Perceptual Speed = speed in perceiving and processing details in presented information — not reaction time or reading speed.",
+    trap: "Numerical Abilities cover computation speed; Perceptual Speed is about detail perception, not numbers.",
+    concept: "Thurstone – Perceptual Speed"
+  },
+  {
+    q: "Guilford's model classifies intellectual traits into Operations, Contents, and Products. Which dimension covers what the respondent actually DOES?",
+    options: ["Contents","Products","Operations","Evaluation"],
+    correct: 2,
+    explanation: "Operations = what the respondent does (cognition, memory, divergent production, etc.). Contents = type of information; Products = output form.",
+    trap: "Evaluation is one type of Operation within Guilford's model, but the dimension covering all actions is 'Operations'.",
+    concept: "Guilford's SOI – Dimensions"
+  },
+  {
+    q: "C.H. Rice attempted to standardise Binet's intelligence test in which languages?",
+    options: ["Hindi and Bengali","Urdu and Punjabi","Tamil and Telugu","Gujarati and Marathi"],
+    correct: 1,
+    explanation: "C.H. Rice standardised Binet's test in Urdu and Punjabi; Mahalanobis did this in Bengali.",
+    trap: "Mohsin worked on Hindi; Mahalanobis on Bengali; Rice on Urdu and Punjabi.",
+    concept: "Intelligence Testing in India – Rice"
+  },
+  {
+    q: "According to Gardner, which intelligence is most relevant for a poet who uses language to create vivid mental images?",
+    options: ["Intrapersonal","Linguistic","Interpersonal","Musical"],
+    correct: 1,
+    explanation: "Linguistic intelligence = capacity to use language fluently and flexibly; poets exemplify this with linguistic imagery.",
+    trap: "Intrapersonal involves self-knowledge; linguistic intelligence is specifically about language use.",
+    concept: "Multiple Intelligences – Linguistic"
+  },
+  {
+    q: "Spearman's statistical method for identifying intelligence factors was:",
+    options: ["Regression analysis","ANOVA","Factor analysis","Cluster analysis"],
+    correct: 2,
+    explanation: "Spearman used factor analysis to mathematically identify underlying factors (g and s) from patterns in intelligence test data.",
+    trap: "Factor analysis is the foundational psychometric technique for intelligence research — students may confuse with regression.",
+    concept: "Spearman – Factor Analysis"
+  },
+  {
+    q: "Terman found that even gifted individuals (IQ 130+) followed throughout adulthood did NOT typically become:",
+    options: ["Successful professionals","High academic achievers","Well-known for creative achievement","Leaders in their fields"],
+    correct: 2,
+    explanation: "NCERT notes Terman's finding that none of the gifted individuals studied became well-known specifically for creative achievements.",
+    trap: "Gifted individuals often achieved professional success, but not necessarily recognised creative breakthroughs.",
+    concept: "Creativity and Intelligence – Terman"
+  },
+  {
+    q: "Long and Mehta prepared a Mental Measurement Handbook listing how many intelligence tests available in India?",
+    options: ["53","78","103","150"],
+    correct: 2,
+    explanation: "Long and Mehta's handbook documented 103 intelligence tests available in various Indian languages.",
+    trap: "The specific number 103 is testable; students often guess round numbers.",
+    concept: "Intelligence Testing in India – Long and Mehta"
+  },
+  {
+    q: "In Gardner's framework, which professionals are MOST likely to have highly developed Interpersonal intelligence?",
+    options: ["Poets and writers","Pilots and architects","Psychologists, counsellors, and politicians","Scientists and Nobel prize winners"],
+    correct: 2,
+    explanation: "Interpersonal intelligence = understanding others' motives and behaviours — most used by psychologists, counsellors, politicians, and social workers.",
+    trap: "Scientists need logical-mathematical; poets need linguistic; pilots need spatial. Interpersonal = understanding people.",
+    concept: "Multiple Intelligences – Interpersonal"
+  },
+  {
+    q: "Case: Arjun is a 15-year-old who has a Mental Age of 12. His classmate Neha, also 15, has a Mental Age of 18. Whose IQ is higher and what would Arjun's IQ be?",
+    options: ["Arjun's IQ is higher; his IQ = 120","Neha's IQ is higher; Arjun's IQ = 80","Arjun's IQ = 90; Neha's IQ = 90","Both have equal IQ of 100"],
+    correct: 1,
+    explanation: "Arjun: IQ = (12/15)×100 = 80. Neha: IQ = (18/15)×100 = 120. Neha's IQ is higher.",
+    trap: "Students may reverse MA and CA in the formula, giving 125 for Arjun.",
+    concept: "IQ Calculation"
+  },
+  {
+    q: "Case: Preethi is a village girl who has never been to school but can identify 150+ medicinal plants, track animals, and predict monsoons. She scores low on a standard IQ test. Which explanation best accounts for this?",
+    options: ["Preethi has borderline intellectual disability","The standard IQ test does not measure her naturalistic and environmental intelligence","Preethi's low IQ score confirms her limited potential","Cultural context has no bearing on intelligence test scores"],
+    correct: 1,
+    explanation: "Standard IQ tests are culturally biased toward western academic skills and miss naturalistic, environmental, and practical intelligences.",
+    trap: "Low scores on a biased test don't indicate intellectual disability — they reflect a mismatch between the test and the individual's cultural intelligence.",
+    concept: "Culture, Intelligence, and Test Bias"
+  },
+  {
+    q: "Case: Rohit has an IQ of 60. His parents report he can feed himself and communicate simply, but struggles with unsupervised daily activities. Which category of intellectual disability does Rohit most likely fall into?",
+    options: ["Profound (below 20–25)","Severe (20–35)","Moderate (35–55)","Mild (55–70)"],
+    correct: 3,
+    explanation: "IQ 60 falls in the mild disability range (55–70). Mild disability allows some independent functioning with support — consistent with Rohit's description.",
+    trap: "Students confuse moderate and mild categories. IQ 60 is mild (55–70), not moderate (35–55).",
+    concept: "Intellectual Disability – Classification"
+  },
+  {
+    q: "Case: Kaveri is a researcher who gives students a test where they are asked to 'think of all possible explanations for why leaves turn yellow in autumn.' What type of thinking and test type is she using?",
+    options: ["Convergent thinking; intelligence test","Divergent thinking; creativity test","Simultaneous processing; PASS assessment","Successive processing; aptitude test"],
+    correct: 1,
+    explanation: "Open-ended tasks with multiple valid answers measure divergent thinking — the hallmark of creativity tests.",
+    trap: "Asking for multiple explanations is divergent, not convergent. Convergent = one right answer.",
+    concept: "Creativity Tests – Divergent Thinking"
+  },
+  {
+    q: "Case: A counsellor wants to assess whether a student should pursue engineering. She conducts tests to measure spatial, mechanical, and mathematical potential. Which domain is she assessing?",
+    options: ["Intelligence","Aptitude","Personality","Values"],
+    correct: 1,
+    explanation: "Aptitude tests assess potential for specific skill domains — predicting who can succeed with proper training in a field like engineering.",
+    trap: "Intelligence is general ability; aptitude is domain-specific potential. Engineering counselling = aptitude assessment.",
+    concept: "Aptitude Testing – Career Guidance"
+  },
+  {
+    q: "Case: Mrs. Verma notices that during exam season, students who are moderately anxious study better than those who are either totally calm or extremely panicked. Which PASS model concept does this best illustrate?",
+    options: ["Successive processing","Simultaneous processing","Optimal arousal for attention","Planning activation"],
+    correct: 2,
+    explanation: "Optimal arousal focuses attention effectively. Too much (extreme panic) or too little (total calm) interferes with information processing.",
+    trap: "Students may say 'planning' since exams require planning. But the arousal-attention link is the key concept here.",
+    concept: "PASS Model – Optimal Arousal"
+  },
+  {
+    q: "Case: Sundar can solve complex chess problems, debate philosophy, and write code. His cousin Vikram is a brilliant musician but struggles academically. According to Gardner, what does this tell us?",
+    options: ["Sundar is more intelligent overall than Vikram","Vikram has a learning disability","Each person has a distinct intelligence profile; types are independent","Vikram's musical ability is not a form of intelligence"],
+    correct: 2,
+    explanation: "Gardner's theory holds that different intelligences are independent — Sundar excels in logical-mathematical/linguistic; Vikram excels in musical. Neither is globally 'more intelligent'.",
+    trap: "Traditional IQ would favour Sundar, but Gardner's theory values all types equally.",
+    concept: "Multiple Intelligences – Independence"
+  },
+  {
+    q: "Case: A clinical psychologist is assessing a 7-year-old referred for learning difficulties. She gathers data through psychological tests, parent interviews, teacher observations, and school records. This comprehensive evaluation is best called:",
+    options: ["Group intelligence testing","Projective assessment","Case study","Situational analysis"],
+    correct: 2,
+    explanation: "A case study integrates multiple assessment methods to create an in-depth psychological portrait of one individual.",
+    trap: "Using multiple tests doesn't make it a 'projective assessment'. The comprehensive multi-method individual approach = case study.",
+    concept: "Case Study – Clinical Use"
+  },
+  {
+    q: "Case: Aisha is academically average but can read the room perfectly, sensing when a classmate is upset even before they say anything, and always resolves conflicts smoothly. Which type of intelligence is Aisha high in?",
+    options: ["Intrapersonal","Logical-Mathematical","Interpersonal","Linguistic"],
+    correct: 2,
+    explanation: "Interpersonal intelligence = ability to understand others' emotions, motives, and behaviours — exactly what Aisha demonstrates.",
+    trap: "Intrapersonal = self-knowledge; Interpersonal = knowledge and management of others.",
+    concept: "Multiple Intelligences – Interpersonal"
+  },
+  {
+    q: "Case: A teacher wants to assess her students' potential for mastering programming in the future, not their current performance. She should use:",
+    options: ["An achievement test","An aptitude test","A personality test","An IQ test"],
+    correct: 1,
+    explanation: "Aptitude tests predict future learning potential with proper training — ideal for predicting programming success.",
+    trap: "An achievement test measures what students already know; aptitude measures what they COULD learn.",
+    concept: "Aptitude Tests – Purpose"
+  },
+  {
+    q: "Case: Ramesh gets 140 on an intelligence test. He's arrogant about it but fails at every job because he can't handle rejection or collaborate. According to NCERT's discussion, what concept explains his failures?",
+    options: ["He actually has a low g-factor","His high IQ guarantees success but he lacks effort","High IQ does not ensure success; emotional intelligence and other factors matter","He needs more aptitude testing"],
+    correct: 2,
+    explanation: "NCERT clearly states that good IQ and scholastic record are not enough for life success; emotional intelligence and practical skills are also critical.",
+    trap: "IQ predicts academic success; it doesn't ensure life or career success without emotional and contextual competencies.",
+    concept: "IQ vs. Emotional Intelligence"
+  },
+  {
+    q: "Case: Identical twins separated at birth show IQ correlation of 0.72. Non-identical twins raised together show 0.60. Siblings raised apart show 0.25. Which conclusion is MOST supported?",
+    options: ["Environment is more important than genes for intelligence","Genes contribute significantly to intelligence","IQ is entirely genetically determined","Shared environment makes siblings as similar as identical twins"],
+    correct: 1,
+    explanation: "The pattern shows genetic relatedness predicts IQ similarity even without shared environment, supporting a significant genetic contribution.",
+    trap: "0.72 is not 1.0 — genes don't fully determine IQ. Significant ≠ complete determination.",
+    concept: "Nature vs. Nurture – Twin Studies"
+  },
+  {
+    q: "Case: Zehra is a nurse who struggles to understand algebraic proofs but is extraordinary at reading patients' emotional states and managing crisis situations. She scores average on IQ tests. Which framework best explains her profile?",
+    options: ["She is intellectually disabled according to IQ classification","Her profile demonstrates multiple intelligences — specifically interpersonal and emotional","She lacks the g-factor necessary for any intelligence","Her skills are not measurable psychologically"],
+    correct: 1,
+    explanation: "Zehra's strengths in emotional awareness and crisis management reflect high interpersonal and emotional intelligence, which IQ tests don't capture.",
+    trap: "Average IQ doesn't mean no intelligence — it means traditional tests don't capture her intelligences.",
+    concept: "Multiple Intelligence and EI in Real Life"
+  },
+  {
+    q: "Case: A social worker uses observations, interviews, and psychological tests over three months to understand a troubled teenager's background, relationships, and psychological history. Which method is this?",
+    options: ["Questionnaire survey","Structured interview","Case study","Projective testing only"],
+    correct: 2,
+    explanation: "Extended, multi-method, in-depth study of one individual's psychological attributes and psychosocial context = case study.",
+    trap: "Using observation and tests doesn't make this 'observation method' or 'projective testing' — the integrated approach over time is a case study.",
+    concept: "Case Study Method"
+  },
+  {
+    q: "Case: In a Western school, children are rewarded for fast individual answers; in a village school, children are taught to consult and reach group consensus. According to Vygotsky, this difference in schooling reflects:",
+    options: ["Genetic differences in intelligence","Cultural shaping of higher mental functions","IQ gaps between urban and rural children","Emotional intelligence deficits in Western schools"],
+    correct: 1,
+    explanation: "Vygotsky argued that culture shapes how higher mental processes like problem-solving and thinking develop and operate.",
+    trap: "Genetic differences don't explain schooling style differences. This is Vygotsky's cultural shaping argument.",
+    concept: "Vygotsky – Culture Shapes Cognition"
+  },
+  {
+    q: "Case: Dilnoza finds it easy to understand lyrics, recognise instruments, and compose original tunes. She struggles with spatial tasks and mathematics. Gardner would describe her as:",
+    options: ["Intellectually deficient in three out of eight areas","High in musical intelligence; this does not reflect on other types","Globally unintelligent because she fails mathematical tasks","Needing remediation in spatial and mathematical areas to be considered intelligent"],
+    correct: 1,
+    explanation: "Musical intelligence is independent of spatial and logical-mathematical intelligence. High musical does NOT predict high or low scores in other types.",
+    trap: "Traditional IQ thinking says maths = smart; Gardner says each type is valid and independent.",
+    concept: "Multiple Intelligences – Musical"
+  },
+  {
+    q: "Case: A 10-year-old girl is referred to a psychologist. She cannot manage self-care, needs constant adult supervision for basic tasks, and shows IQ of 22. According to NCERT, she falls in which category?",
+    options: ["Mild disability","Moderate disability","Severe disability","Profound disability"],
+    correct: 3,
+    explanation: "IQ below 20–25 = Profound disability. These individuals cannot manage life independently and need constant care.",
+    trap: "IQ 22 is BELOW the profound range threshold (below 20–25 overlaps this). Profound = most severe, needs constant institutional care.",
+    concept: "Intellectual Disability – Profound"
+  },
+  {
+    q: "Case: A company uses a test that measures Verbal Reasoning, Numerical Reasoning, Abstract Reasoning, and Mechanical Reasoning together to select engineers. Which test type are they most likely using?",
+    options: ["Personality inventory","Group intelligence test","Differential Aptitude Test battery","Individual IQ test"],
+    correct: 2,
+    explanation: "DAT (Differential Aptitude Tests) is a multiple aptitude battery measuring distinct areas — exactly matching the described subtests.",
+    trap: "An IQ test measures general cognitive ability; DAT measures multiple distinct aptitudes.",
+    concept: "Differential Aptitude Tests – DAT"
+  },
+  {
+    q: "Case: An NGO runs a programme in rural schools teaching children to recognise their emotions, express them safely, and understand how emotions affect their decisions. This programme aims to develop:",
+    options: ["IQ","Spatial intelligence","Emotional intelligence","Aptitude for teaching"],
+    correct: 2,
+    explanation: "Programmes targeting emotion recognition, expression, and regulation are developing emotional intelligence.",
+    trap: "These skills are not part of IQ or aptitude — they are the core components of EI.",
+    concept: "Emotional Intelligence – Programmes"
+  },
+  {
+    q: "Case: Professor Mehta administers the same IQ test to a child from a wealthy Delhi family and a child from a rural Adivasi community. The rural child scores much lower. Professor Mehta concludes the rural child is less intelligent. What error is Professor Mehta making?",
+    options: ["Confusing mental age with chronological age","Using a culturally biased test and applying it inappropriately across cultures","Incorrectly computing the IQ score","Confusing aptitude with intelligence"],
+    correct: 1,
+    explanation: "The test likely reflects urban/western cultural norms; applying it to a rural Adivasi child produces biased, invalid results.",
+    trap: "The computational error is plausible, but the deeper error is cultural bias in test selection and interpretation.",
+    concept: "Culture-Biased Testing – Misuse"
+  },
+  {
+    q: "Case: During a fire emergency, Reema calmly directs people, assesses who needs help most, and prevents panic — all while managing her own fear. Which combination of intelligences and competencies is most relevant here?",
+    options: ["Spatial and musical intelligence","Componential intelligence only","Interpersonal intelligence and emotional intelligence","Naturalistic intelligence and aptitude"],
+    correct: 2,
+    explanation: "Managing others effectively (interpersonal) and regulating her own fear (emotional intelligence) are both active in this high-pressure scenario.",
+    trap: "Analytical/componential intelligence is cognitive — the key here is social and emotional competence.",
+    concept: "EI and Interpersonal Intelligence – Application"
+  },
+  {
+    q: "Case: Anand is preparing for a competitive exam. He sets goals, creates a study schedule, and revises his plan when it isn't working. According to PASS model, which function is primarily driving his study behaviour?",
+    options: ["Simultaneous processing","Successive processing","Arousal-attention","Planning"],
+    correct: 3,
+    explanation: "Planning = setting goals, deciding strategies, implementing them, and evaluating effectiveness — exactly what Anand is doing.",
+    trap: "Students might say 'successive processing' because studying involves sequence. But the goal-setting + monitoring = planning.",
+    concept: "PASS Model – Planning"
+  },
+  {
+    q: "Case: A music producer can immediately identify when a single instrument is slightly out of tune among twenty. According to Gardner, she has exceptional:",
+    options: ["Naturalistic intelligence","Spatial intelligence","Musical intelligence","Bodily-Kinaesthetic intelligence"],
+    correct: 2,
+    explanation: "Musical intelligence = sensitivity to sounds, vibrations, and patterns — including fine discrimination of pitch.",
+    trap: "Naturalistic is about the natural world; musical is specifically about sound patterns and musical sensitivity.",
+    concept: "Multiple Intelligences – Musical"
+  },
+  {
+    q: "Case: Nisha scores 145 on an IQ test. Her teachers assume she will excel at everything. Later, she fails in artistic and creative competitions repeatedly. What concept does this demonstrate?",
+    options: ["IQ tests are inaccurate for gifted students","High intelligence guarantees high creativity","Intelligence and creativity are distinct; high IQ doesn't ensure high creativity","Nisha has a learning disability in creative areas"],
+    correct: 2,
+    explanation: "NCERT repeatedly emphasises: intelligence ≠ creativity. Nisha demonstrates this exactly — high IQ, but not necessarily high creative output.",
+    trap: "Students assume 'gifted = creative'. NCERT's case of Sunita and Rita illustrates this exact point.",
+    concept: "Intelligence ≠ Creativity"
+  },
+  {
+    q: "Case: A child from a disadvantaged background was adopted at age 3 into a middle-class family with quality schooling and nutrition. By age 12, her IQ had increased significantly. Which conclusion does this support?",
+    options: ["IQ is fixed at birth by genetics","Environmental enrichment can raise IQ scores significantly","Adoption always produces high IQ","This is an anomaly and cannot be generalised"],
+    correct: 1,
+    explanation: "NCERT cites evidence that children from disadvantaged homes placed in richer environments show large IQ increases — demonstrating environmental influence.",
+    trap: "Genetics set a range, but enrichment can move development upward within that range.",
+    concept: "Environment and Intelligence"
+  },
+  {
+    q: "Case: A football coach notices that Kiran never follows a fixed training script but constantly finds new moves and strategies during matches. Kiran cannot explain how he does it. According to Sternberg, Kiran is demonstrating:",
+    options: ["Componential intelligence","Contextual intelligence","Experiential intelligence","Associative learning"],
+    correct: 2,
+    explanation: "Experiential intelligence involves creative use of past experience to solve novel problems — intuitive and creative, hard to articulate explicitly.",
+    trap: "Contextual is adapting to environment; experiential is creative use of accumulated experience.",
+    concept: "Triarchic Theory – Experiential"
+  },
+  {
+    q: "Case: A student who scores 70 on a creativity test can list 25 uses for a paperclip in 2 minutes. She cannot, however, solve the logic puzzle correctly. What would this student's result suggest about the relationship between creativity and intelligence?",
+    options: ["Her creativity is evidence of high intelligence","Creativity and intelligence are the same thing","Creativity can be high even when convergent/logical intelligence is lower","She has intellectual disability"],
+    correct: 2,
+    explanation: "Creativity tests measure divergent thinking; intelligence tests measure convergent thinking. They are related but distinct — one can be high while the other is lower.",
+    trap: "High creativity ≠ high IQ. They are positively related only at a baseline level.",
+    concept: "Creativity vs. Intelligence"
+  },
+  {
+    q: "Case: A researcher studying twins found that even fraternal twins raised together show less intellectual similarity (0.60) than identical twins raised apart (0.72). What does this suggest?",
+    options: ["Shared environment is more powerful than genes","Genes contribute more to intellectual similarity than shared environment in this comparison","Fraternal twins have lower IQ on average","Identical twins always share environments even when separated"],
+    correct: 1,
+    explanation: "Identical twins (same genes, different environments) = 0.72; fraternal twins (different genes, same environment) = 0.60. Genes explain more variance here.",
+    trap: "Students may assume shared environment means higher similarity. The data contradicts this expectation.",
+    concept: "Nature vs. Nurture – Genetic Contribution"
+  },
+  {
+    q: "Case: Manoj uses street slang, navigates complex social hierarchies, and always gets the best deals at markets — yet he failed school repeatedly. Sternberg would describe Manoj as having high:",
+    options: ["Componential intelligence","Experiential intelligence","Contextual (practical) intelligence","Linguistic intelligence"],
+    correct: 2,
+    explanation: "Contextual intelligence = street smartness and business sense — adapting to, shaping, or selecting environments for goal achievement.",
+    trap: "Components = analytical/school; Contextual = real-world/practical/street smart.",
+    concept: "Triarchic Theory – Contextual (Street Smart)"
+  },
+  {
+    q: "Case: A child excels in school tests (convergent tasks), but when given an art project with no fixed answer, she freezes and produces nothing original. This best illustrates:",
+    options: ["The child has an aptitude for art but lacks training","Intelligence and creativity use different cognitive modes; she is strong in convergent, not divergent thinking","The child needs emotional intelligence training","She has poor spatial intelligence"],
+    correct: 1,
+    explanation: "Intelligence tasks are convergent (one right answer); creative tasks are divergent (many valid answers). The child excels in one mode but not the other.",
+    trap: "This isn't about art aptitude or emotional intelligence — it's about convergent vs. divergent thinking styles.",
+    concept: "Convergent vs. Divergent Thinking"
+  },
+  {
+    q: "Priya's IQ is 85. Which descriptive label applies to her according to NCERT?",
+    options: ["Average","Low Average","Borderline","Intellectually Disabled"],
+    correct: 1,
+    explanation: "IQ 80–89 = Low Average according to NCERT's Table 1.1.",
+    trap: "Average = 90–109; 85 falls in 80–89 which is Low Average, not Average.",
+    concept: "IQ Classification"
+  },
+  {
+    q: "A student memorises all multiplication tables in perfect order. This is an example of which PASS process?",
+    options: ["Simultaneous processing","Planning","Successive processing","Arousal"],
+    correct: 2,
+    explanation: "Successive processing = serial memory where one item cues the next — exactly how multiplication tables are memorised.",
+    trap: "Simultaneous = integrating into a pattern; successive = serial order.",
+    concept: "PASS – Successive Processing"
+  },
+  {
+    q: "A surgeon who uses precise hand movements and spatial awareness to perform microsurgery demonstrates which intelligence(s)?",
+    options: ["Linguistic and interpersonal","Bodily-Kinaesthetic and Spatial","Musical and naturalistic","Logical-mathematical only"],
+    correct: 1,
+    explanation: "Microsurgery requires fine bodily control (Bodily-Kinaesthetic) and spatial awareness (Spatial) — both listed by Gardner.",
+    trap: "Logical-mathematical is commonly assumed for doctors, but the task here is specifically motor + spatial.",
+    concept: "Multiple Intelligences – Applied"
+  },
+  {
+    q: "An aptitude test predicts that Sohan will do well as a writer. What psychological attribute does this test measure?",
+    options: ["Current writing performance","Interest in literature","Underlying potential for acquiring language and writing skills","Personality traits"],
+    correct: 2,
+    explanation: "Aptitude = underlying potential to acquire specific skills with training — not current performance or interest.",
+    trap: "An achievement test would measure current performance. Aptitude predicts what one COULD do.",
+    concept: "Aptitude – Nature"
+  },
+  {
+    q: "Emotional Quotient (EQ) is to Emotional Intelligence as IQ is to:",
+    options: ["Aptitude","Personality","Intelligence","Values"],
+    correct: 2,
+    explanation: "EQ quantifies emotional intelligence just as IQ quantifies cognitive intelligence — they are analogous measures.",
+    trap: "EQ doesn't measure personality or values — it specifically quantifies emotional intelligence.",
+    concept: "EQ and IQ – Analogy"
+  },
+  {
+    q: "Bhatia's Battery of Performance Tests is classified as which type of test?",
+    options: ["Verbal","Group verbal","Performance (non-verbal)","Projective"],
+    correct: 2,
+    explanation: "Bhatia's Battery is a performance (non-verbal) test — one of the most popular Indian intelligence tests of its kind.",
+    trap: "Performance tests don't use language — they require physical task completion.",
+    concept: "Indian Intelligence Tests – Bhatia"
+  },
+  {
+    q: "A child with IQ 40 would fall into which category of intellectual disability?",
+    options: ["Mild (55–70)","Moderate (35–55)","Severe (20–35)","Profound (below 20)"],
+    correct: 1,
+    explanation: "IQ 40 falls in the moderate disability range (35–55). Moderate disability requires supervision for daily tasks.",
+    trap: "Students may say mild (55–70) which is a common confusion. 40 is below that range — it's moderate.",
+    concept: "Intellectual Disability – Categories"
+  },
+  {
+    q: "The self-report method of psychological assessment relies primarily on:",
+    options: ["Observations by trained psychologists","Psychologist's clinical judgement","The individual providing information about themselves","Performance on standardised tests"],
+    correct: 2,
+    explanation: "Self-report = the individual provides information about their own characteristics, beliefs, or opinions.",
+    trap: "Unlike observation (psychologist watches), self-report is the person's own account.",
+    concept: "Assessment Methods – Self-Report"
+  },
+  {
+    q: "In NCERT, 'integral intelligence' is a term associated with:",
+    options: ["Western technological societies","Guilford's SOI model","Indian intellectual tradition emphasising connectivity","Sternberg's contextual intelligence"],
+    correct: 2,
+    explanation: "Integral intelligence is the Indian tradition's term, emphasising holistic connectivity with social and natural world — beyond western cognitive definitions.",
+    trap: "Sternberg's contextual is practical/street-smart; integral intelligence is the specific Indian traditional concept.",
+    concept: "Indian Intelligence Tradition"
+  },
+  {
+    q: "A psychologist warns that intelligence tests may 'attach a stigma to children.' This is a concern about:",
+    options: ["Test reliability","Misuse of intelligence tests","IQ formula accuracy","Cultural fairness of tests"],
+    correct: 1,
+    explanation: "NCERT's Box 1.1 explicitly warns that poor test performance can stigmatise children — a form of misuse.",
+    trap: "Reliability is a technical test property; stigmatisation is a social consequence of misuse.",
+    concept: "Misuses of Intelligence Tests"
+  }
+];
+
+let score = 0;
+let attempted = 0;
+
+function loadQuiz() {
+  const quiz = document.getElementById("quiz");
+
+  questions.forEach((q, index) => {
+    let html = `<div class="card">`;
+    html += `<p><b>Q${index + 101}. ${q.q}</b></p>`;
+
+    q.options.forEach((opt, i) => {
+      html += `<button class="option" onclick="check(${index}, ${i}, this)">${opt}</button>`;
+    });
+
+    html += `<p id="res${index}"></p>`;
+    html += `<div class="explanation hidden" id="exp${index}">
+                <p><b>Explanation:</b> ${q.explanation}</p>
+                <p><b>Concept:</b> ${q.concept}</p>
+                <p><b>Trap:</b> ${q.trap}</p>
+             </div>`;
+    html += `</div>`;
+    quiz.innerHTML += html;
+  });
+}
+
+function check(qIndex, selected, btn) {
+  const res = document.getElementById("res" + qIndex);
+  const exp = document.getElementById("exp" + qIndex);
+
+  if (res.innerHTML !== "") return;
+
+  attempted++;
+
+  if (selected === questions[qIndex].correct) {
+    res.innerHTML = "✅ Correct";
+    res.className = "correct";
+    score++;
+  } else {
+    res.innerHTML = "❌ Incorrect";
+    res.className = "wrong";
+  }
+
+  exp.classList.remove("hidden");
+  disableOptions(qIndex);
+  updateProgress();
+}
+
+function disableOptions(qIndex) {
+  const buttons = document.querySelectorAll(`.card:nth-child(${qIndex+1}) .option`);
+  buttons.forEach(btn => btn.disabled = true);
+}
+
+function updateProgress() {
+  document.getElementById("progress").innerText = `Score: ${score} / ${attempted}`;
+}
+
+function goBack() {
+  window.location.href = "level1_set2.html";
+}
+
+function goNext() {
+  window.location.href = "level1_set4.html";
+}
+
+loadQuiz();
+</script>
+</body>
+</html>
